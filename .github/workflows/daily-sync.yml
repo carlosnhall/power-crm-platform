@@ -1,9 +1,9 @@
-# Nombre del flujo de trabajo que verás en GitHub
+# Nombre del flujo de trabajo
 name: Sincronización Diaria de Datos
 
 # ¿Cuándo se debe ejecutar este flujo?
 on:
-  # Permite ejecutarlo manually desde la pestaña "Actions" de GitHub
+  # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub
   workflow_dispatch:
 
   # Se ejecuta automáticamente todos los días a las 11:00 UTC (8:00 AM en Argentina)
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Usamos la versión 18 de Node.js
+          node-version: '18'
 
       # 3. Crear los archivos .env a partir de los "secretos" de GitHub
       - name: Crear .env para el servicio de persistencia
@@ -51,6 +51,6 @@ jobs:
           echo "JIRA_PROJECT_KEYS=${{ secrets.JIRA_PROJECT_KEYS }}" >> ./services/ingestor-jira/.env
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
 
-      # 4. Ejecutar el script orquestador que creamos
+      # 4. Ejecutar el script orquestador
       - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js
