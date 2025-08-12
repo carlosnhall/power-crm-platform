@@ -18,65 +18,78 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error('❌ Error conectando a MongoDB:', err));
 
 // --- MODELOS DE DATOS (SCHEMAS) ---
-const RendimientoSchema = new mongoose.Schema({
-    Proveedor: String,
-    MesConsulta: String,
-    TipoReporte: String,
-    NUM_INCIDENTE: String,
-    GRUPO: String
-}, { strict: false, timestamps: true });
-
+const RendimientoSchema = new mongoose.Schema({ /* ... */ }, { strict: false, timestamps: true });
 const RendimientoConnectis = mongoose.model('RendimientoConnectis', RendimientoSchema, 'rendimiento_connectis');
 const RendimientoNttdata = mongoose.model('RendimientoNttdata', RendimientoSchema, 'rendimiento_nttdata');
+
+// --- ¡NUEVO! Schema para los datos de Jira ---
+const JiraIssueSchema = new mongoose.Schema({
+    key: { type: String, unique: true, required: true }, // La clave del issue (ej. AGPAPP-588)
+    project: String,
+    summary: String,
+    type: String,
+    status: String,
+    priority: String,
+    assignee: String,
+    labels: [String],
+    sprint: Object,
+    created: Date,
+    updated: Date,
+}, { strict: false, timestamps: true }); // `strict: false` permite guardar otros campos también
+
+const JiraIssue = mongoose.model('JiraIssue', JiraIssueSchema, 'jira_issues');
 
 
 // --- API ENDPOINTS ---
 
-// Endpoint para GUARDAR los datos de rendimiento
-app.post('/api/rendimiento', async (req, res) => {
-    const { proveedor, mes, data } = req.body;
-    if (!proveedor || !mes || !data) {
-        return res.status(400).json({ message: "Faltan los parámetros 'proveedor', 'mes' o 'data'." });
+// Endpoints para Rendimiento (sin cambios)
+// ... app.post('/api/rendimiento', ...)
+// ... app.get('/api/rendimiento/:proveedor/meses', ...)
+
+
+// --- ¡NUEVOS ENDPOINTS PARA JIRA! ---
+
+// Endpoint para GUARDAR los datos de Jira (con lógica de actualización)
+app.post('/api/jira-issues', async (req, res) => {
+    const issues = req.body; // Esperamos un array de issues
+    if (!issues || !Array.isArray(issues)) {
+        return res.status(400).json({ message: "El cuerpo de la petición debe ser un array de issues." });
     }
-    console.log(`Recibida petición para guardar ${data.length} registros de '${proveedor}' para '${mes}'.`);
+    console.log(`Recibida petición para guardar/actualizar ${issues.length} issues de Jira.`);
+
     try {
-        const collection = proveedor.toUpperCase() === 'CONNECTIS' ? RendimientoConnectis : RendimientoNttdata;
-        await collection.deleteMany({ MesConsulta: mes });
-        console.log(` -> Datos antiguos para '${mes}' eliminados.`);
-        await collection.insertMany(data);
-        console.log(` -> ${data.length} nuevos registros insertados.`);
-        res.status(201).json({ message: `Datos guardados correctamente.` });
+        const bulkOps = issues.map(issue => ({
+            updateOne: {
+                filter: { key: issue.key }, // Busca el issue por su clave única
+                update: { $set: issue },   // Actualiza todos sus campos
+                upsert: true               // Si no lo encuentra, lo crea (insert)
+            }
+        }));
+
+        if (bulkOps.length > 0) {
+            const result = await JiraIssue.bulkWrite(bulkOps);
+            console.log(` -> Resultado: ${result.upsertedCount} creados, ${result.modifiedCount} actualizados.`);
+        }
+        
+        res.status(201).json({ message: `Issues de Jira guardados/actualizados correctamente.` });
     } catch (error) {
         console.error("❌ Error al guardar en MongoDB:", error);
-        res.status(500).json({ message: "Error interno al guardar los datos." });
+        res.status(500).json({ message: "Error interno al guardar los datos de Jira." });
     }
 });
 
-// Endpoint para OBTENER los datos (para el futuro frontend)
-app.get('/api/rendimiento/:proveedor', async (req, res) => {
-    const { proveedor } = req.params;
-    const collection = proveedor.toUpperCase() === 'CONNECTIS' ? RendimientoConnectis : RendimientoNttdata;
+// Endpoint para OBTENER la fecha del último issue actualizado
+app.get('/api/jira-issues/latest-update', async (req, res) => {
     try {
-        const data = await collection.find();
-        res.status(200).json(data);
+        // Busca en la colección, ordena por 'updated' de forma descendente y toma el primero.
+        const latestIssue = await JiraIssue.findOne().sort({ updated: -1 });
+        if (latestIssue) {
+            res.status(200).json({ latestUpdate: latestIssue.updated });
+        } else {
+            res.status(200).json({ latestUpdate: null }); // No hay datos todavía
+        }
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener los datos." });
-    }
-});
-
-// --- ¡NUEVO ENDPOINT! ---
-// Para devolver una lista de los meses que ya han sido descargados para un proveedor.
-app.get('/api/rendimiento/:proveedor/meses', async (req, res) => {
-    const { proveedor } = req.params;
-    console.log(`Petición para obtener meses descargados para: ${proveedor}`);
-    const collection = proveedor.toUpperCase() === 'CONNECTIS' ? RendimientoConnectis : RendimientoNttdata;
-    try {
-        // Usamos .distinct() para obtener una lista de valores únicos del campo 'MesConsulta'
-        const meses = await collection.distinct('MesConsulta');
-        res.status(200).json(meses); // Devuelve un array de strings, ej: ["January", "February"]
-    } catch (error) {
-        console.error(`Error obteniendo meses para ${proveedor}:`, error);
-        res.status(500).json({ message: "Error al obtener los meses." });
+        res.status(500).json({ message: "Error al obtener la última fecha de actualización." });
     }
 });
 

@@ -1,48 +1,47 @@
-# Nombre del flujo de trabajo que verás en GitHub
-name: Sincronización Diaria de Datos de Rendimiento
+# Nombre del flujo de trabajo
+name: Sincronización Diaria de Datos
 
-# ¿Cuándo se debe ejecutar este flujo?
 on:
-  # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub
   workflow_dispatch:
-
-  # Se ejecuta automáticamente todos los días a las 11:00 UTC (8:00 AM en Argentina)
   schedule:
     - cron: '0 11 * * *'
 
-# ¿Qué trabajos se deben realizar?
 jobs:
   sync-data:
-    # El tipo de máquina virtual en la que se ejecutará
     runs-on: ubuntu-latest
-
-    # Los pasos que se ejecutarán en orden
     steps:
-      # 1. Descarga tu código del repositorio a la máquina virtual
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      # 2. Configura Node.js para que podamos usarlo
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Usamos la versión 18 de Node.js
+          node-version: '18'
 
-      # 3. Crear los archivos .env a partir de los "secretos" de GitHub
-      # ¡Este paso es crucial para la seguridad!
-      - name: Crear archivo .env para el servicio de persistencia
+      # --- Crear los archivos .env a partir de los secretos ---
+      - name: Crear .env para el servicio de persistencia
         run: |
           echo "PORT=3003" >> ./services/persistence-api/.env
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/persistence-api/.env
       
-      - name: Crear archivo .env para el servicio de ingesta
+      - name: Crear .env para el servicio de ingesta de rendimiento
         run: |
           echo "PORT=3002" >> ./services/ingestor-grafana-rendimiento/.env
           echo "GRAFANA_DOWNLOAD_URL=${{ secrets.GRAFANA_DOWNLOAD_URL }}" >> ./services/ingestor-grafana-rendimiento/.env
           echo "WINDOWS_USER=${{ secrets.WINDOWS_USER }}" >> ./services/ingestor-grafana-rendimiento/.env
           echo "WINDOWS_PASSWORD=${{ secrets.WINDOWS_PASSWORD }}" >> ./services/ingestor-grafana-rendimiento/.env
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-grafana-rendimiento/.env
+      
+      # --- ¡NUEVO! Crear el .env para el servicio de Jira ---
+      - name: Crear .env para el servicio de ingesta de Jira
+        run: |
+          echo "PORT=3004" >> ./services/ingestor-jira/.env
+          echo "JIRA_BASE_URL=${{ secrets.JIRA_BASE_URL }}" >> ./services/ingestor-jira/.env
+          echo "JIRA_USER_EMAIL=${{ secrets.JIRA_USER_EMAIL }}" >> ./services/ingestor-jira/.env
+          echo "JIRA_API_TOKEN=${{ secrets.JIRA_API_TOKEN }}" >> ./services/ingestor-jira/.env
+          echo "JIRA_PROJECT_KEYS=${{ secrets.JIRA_PROJECT_KEYS }}" >> ./services/ingestor-jira/.env
+          echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
 
-      # 4. Ejecutar el script orquestador que creamos
+      # --- Ejecutar el script orquestador ---
       - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js
