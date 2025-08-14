@@ -2,35 +2,25 @@
 name: Sincronización Diaria de Datos
 
 on:
-  # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub
   workflow_dispatch:
-
-  # Se ejecuta automáticamente todos los días a las 11:00 UTC (8:00 AM en Argentina)
   schedule:
     - cron: '0 11 * * *'
 
 jobs:
   sync-data:
-    # El tipo de máquina virtual en la que se ejecutará
     runs-on: ubuntu-latest
-
-    # Los pasos que se ejecutarán en orden
     steps:
-      # 1. Descarga tu código del repositorio a la máquina virtual
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      # 2. Configura Node.js para que podamos usarlo
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3. Instala todas las dependencias del proyecto (con la corrección)
       - name: Instalar dependencias de Node.js
         run: npm install --legacy-peer-deps
 
-      # 4. Crear los archivos .env a partir de los "secretos" de GitHub
       - name: Crear .env para el servicio de persistencia
         run: |
           echo "PORT=3003" >> ./services/persistence-api/.env
@@ -46,10 +36,14 @@ jobs:
         run: |
           echo "JIRA_EMAIL=${{ secrets.JIRA_EMAIL }}" >> ./services/ingestor-jira/.env
           echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> ./services/ingestor-jira/.env
-          # --- ¡AQUÍ ESTABA EL ERROR CORREGIDO! ---
           echo "FILTER_IDS=${{ secrets.JIRA_FILTER_IDS }}" >> ./services/ingestor-jira/.env
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/ingestor-jira/.env
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
+
+      # --- NUEVO PASO DE DIAGNÓSTICO ---
+      # Este paso imprimirá el contenido del script para que podamos verlo.
+      - name: Mostrar contenido del script orquestador
+        run: cat ./automation/run-sync.js
 
       # 5. Ejecutar el script orquestador
       - name: Ejecutar el script de sincronización
