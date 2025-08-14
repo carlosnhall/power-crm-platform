@@ -46,6 +46,7 @@ jobs:
         run: |
           echo "JIRA_EMAIL=${{ secrets.JIRA_EMAIL }}" >> ./services/ingestor-jira/.env
           echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> ./services/ingestor-jira/.env
+          # --- ¡AQUÍ ESTABA EL ERROR CORREGIDO! ---
           echo "FILTER_IDS=${{ secrets.JIRA_FILTER_IDS }}" >> ./services/ingestor-jira/.env
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/ingestor-jira/.env
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
