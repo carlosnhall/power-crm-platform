@@ -1,6 +1,6 @@
 // Importar las librerías necesarias
 const axios = require('axios');
-const ntlm = require('axios-ntlm'); // Corregido: Importación directa
+const ntlm = require('axios-ntlm');
 const Papa = require('papaparse');
 const { MongoClient } = require('mongodb'); // Añadido para la conexión directa a la BD
 require('dotenv').config();
