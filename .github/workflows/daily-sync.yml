@@ -21,34 +21,18 @@ jobs:
       - name: Instalar dependencias de Node.js
         run: npm install --legacy-peer-deps
 
-      # --- Creación de archivos .env ---
-      - name: Crear .env para el servicio de persistencia
-        run: |
-          echo "PORT=3003" >> ./services/persistence-api/.env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/persistence-api/.env
-      
-      - name: Crear .env para el servicio de ingesta de rendimiento
-        run: |
-          echo "PORT=3002" >> ./services/ingestor-grafana-rendimiento/.env
-          echo "GRAFANA_DOWNLOAD_URL=${{ secrets.GRAFANA_DOWNLOAD_URL }}" >> ./services/ingestor-grafana-rendimiento/.env
-          echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-grafana-rendimiento/.env
-
-      - name: Crear .env para el servicio de ingesta de Jira
-        run: |
-          echo "JIRA_EMAIL=${{ secrets.JIRA_EMAIL }}" >> ./services/ingestor-jira/.env
-          echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> ./services/ingestor-jira/.env
-          echo "FILTER_IDS=${{ secrets.JIRA_FILTER_IDS }}" >> ./services/ingestor-jira/.env
-          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/ingestor-jira/.env
-          echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
-
-      # --- NUEVO PASO DE DIAGNÓSTICO ---
-      # Este paso imprimirá el contenido del .env de Jira para que podamos verlo.
-      - name: Verificar el contenido del .env de Jira
-        run: |
-          echo "--- Contenido de .env de Jira ---"
-          cat ./services/ingestor-jira/.env
-          echo "---------------------------------"
-      
-      # --- Ejecución del script ---
+      # --- CAMBIO IMPORTANTE ---
+      # Ya no creamos archivos .env. Inyectamos los secretos directamente.
       - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js
+        env:
+          # Aquí se inyectan tus secretos de forma segura como variables de entorno
+          # para que process.env las pueda leer directamente.
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          JIRA_FILTER_IDS: ${{ secrets.JIRA_FILTER_IDS }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          GRAFANA_DOWNLOAD_URL: ${{ secrets.GRAFANA_DOWNLOAD_URL }}
+          # Las credenciales de Windows también irían aquí si el ingestor de Grafana las necesita
+          # WINDOWS_USER: ${{ secrets.WINDOWS_USER }}
+          # WINDOWS_PASSWORD: ${{ secrets.WINDOWS_PASSWORD }}

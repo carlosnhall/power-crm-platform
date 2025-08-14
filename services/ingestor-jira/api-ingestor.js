@@ -1,7 +1,6 @@
 // services/ingestor-jira/api-ingestor.js
 
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 
 const fetch = require('node-fetch');
 const { MongoClient } = require('mongodb');

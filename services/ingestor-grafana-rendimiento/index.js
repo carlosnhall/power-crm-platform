@@ -1,9 +1,9 @@
 // Importar las librerías necesarias
 const axios = require('axios');
-const ntlm = require('axios-ntlm');
+const ntlm = require('axios-ntlm'); // Corregido: Importación directa
 const Papa = require('papaparse');
 const { MongoClient } = require('mongodb'); // Añadido para la conexión directa a la BD
-require('dotenv').config();
+
 
 // --- CONFIGURACIÓN ---
 const DOWNLOAD_URL_BASE = process.env.GRAFANA_DOWNLOAD_URL;
