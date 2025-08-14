@@ -57,7 +57,44 @@ async function main() {
         // 4. Detener todos los servicios
         console.log("\n--- Deteniendo los microservicios ---");
         if (persistenceProcess) persistenceProcess.kill();
-        if (ingestorRendimientoProcess) ingestorRendimientoProcess.kill();
+        if (ingestorRendimien// automation/run-sync.js
+
+// Importamos las funciones principales de nuestros ingestores
+// La ruta puede necesitar ajuste según tu estructura final
+const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
+const ingestGrafanaData = require('../services/ingestor-grafana-rendimiento/index.js'); // Asumo que el archivo principal se llama index.js
+
+/**
+ * Función principal que orquesta la ejecución de los ingestores.
+ */
+async function runSynchronization() {
+  console.log('--- Iniciando Sincronización de Datos ---');
+
+  try {
+    // Ejecutamos el ingestor de Jira y esperamos a que termine
+    console.log('\n--- Ejecutando Ingestor de Jira ---');
+    await ingestJiraData();
+    console.log('--- Ingestor de Jira finalizado ---');
+
+    // Ejecutamos el ingestor de Grafana y esperamos a que termine
+    console.log('\n--- Ejecutando Ingestor de Grafana ---');
+    await ingestGrafanaData();
+    console.log('--- Ingestor de Grafana finalizado ---');
+
+    // Aquí podrías agregar más ingestores en el futuro
+    // ...
+
+    console.log('\n✅ Sincronización de todos los datos completada con éxito.');
+
+  } catch (error) {
+    console.error('❌ Ocurrió un error durante la orquestación:', error);
+    // process.exit(1) le dice a GitHub Actions que el job falló
+    process.exit(1);
+  }
+}
+
+// Ejecutamos la orquestación
+runSynchronization();toProcess) ingestorRendimientoProcess.kill();
         if (ingestorJiraProcess) ingestorJiraProcess.kill();
         console.log("🏁 Sincronización finalizada.");
     }
