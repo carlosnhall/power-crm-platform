@@ -2,30 +2,35 @@
 name: Sincronización Diaria de Datos
 
 on:
+  # Permite ejecutarlo manualmente desde la pestaña "Actions" de GitHub
   workflow_dispatch:
+
+  # Se ejecuta automáticamente todos los días a las 11:00 UTC (8:00 AM en Argentina)
   schedule:
-    - cron: '0 11 * * *' # 11:00 UTC (8:00 AM en Argentina)
+    - cron: '0 11 * * *'
 
 jobs:
   sync-data:
+    # El tipo de máquina virtual en la que se ejecutará
     runs-on: ubuntu-latest
 
+    # Los pasos que se ejecutarán en orden
     steps:
+      # 1. Descarga tu código del repositorio a la máquina virtual
       - name: Checkout del código
         uses: actions/checkout@v3
 
+      # 2. Configura Node.js para que podamos usarlo
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # --- CAMBIO 1: AÑADIDO PASO PARA INSTALAR DEPENDENCIAS ---
-      # Este paso es crucial. Instala todas las librerías necesarias
-      # definidas en tu package.json (axios, mongodb, node-fetch, etc.)
+      # 3. Instala todas las dependencias del proyecto (con la corrección)
       - name: Instalar dependencias de Node.js
         run: npm install --legacy-peer-deps
 
-      # --- PASO DE CREAR .env (SIN CAMBIOS PARA OTROS SERVICIOS) ---
+      # 4. Crear los archivos .env a partir de los "secretos" de GitHub
       - name: Crear .env para el servicio de persistencia
         run: |
           echo "PORT=3003" >> ./services/persistence-api/.env
@@ -37,17 +42,14 @@ jobs:
           echo "GRAFANA_DOWNLOAD_URL=${{ secrets.GRAFANA_DOWNLOAD_URL }}" >> ./services/ingestor-grafana-rendimiento/.env
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-grafana-rendimiento/.env
 
-      # --- CAMBIO 2: AJUSTADO EL .env PARA EL NUEVO SCRIPT DE JIRA ---
-      # Ahora creamos las variables que nuestro script api-ingestor.js necesita.
       - name: Crear .env para el servicio de ingesta de Jira
         run: |
           echo "JIRA_EMAIL=${{ secrets.JIRA_EMAIL }}" >> ./services/ingestor-jira/.env
           echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> ./services/ingestor-jira/.env
           echo "FILTER_IDS=${{ secrets.JIRA_FILTER_IDS }}" >> ./services/ingestor-jira/.env
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> ./services/ingestor-jira/.env
-          # La siguiente variable la hardcodeamos porque el script de orquestación podría necesitarla
           echo "PERSISTENCE_API_URL=http://localhost:3003" >> ./services/ingestor-jira/.env
 
-      # --- PASO FINAL (SIN CAMBIOS) ---
+      # 5. Ejecutar el script orquestador
       - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js
