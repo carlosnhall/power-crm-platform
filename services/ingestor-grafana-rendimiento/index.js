@@ -48,7 +48,6 @@ async function downloadReport(providerConfig, monthName, monthNumber, reportName
     };
 
     try {
-        // --- CORRECCIÓN: Uso correcto de axios-ntlm ---
         const response = await axios({
             method: 'get',
             url: DOWNLOAD_URL_BASE,
@@ -57,10 +56,9 @@ async function downloadReport(providerConfig, monthName, monthNumber, reportName
                 username: WINDOWS_USER,
                 password: WINDOWS_PASSWORD
             },
-            transformRequest: ntlm(), // Aplicar el transformador NTLM
+            transformRequest: ntlm(),
             responseType: 'text'
         });
-        // ---------------------------------------------
 
         const csvContent = response.data;
         if (csvContent.toLowerCase().includes("<!doctype html")) {
@@ -85,7 +83,7 @@ async function getMesesYaDescargados(providerName) {
     try {
         console.log(`Consultando meses ya descargados para ${providerName}...`);
         const response = await axios.get(`${PERSISTENCE_API_URL}/api/rendimiento/${providerName}/meses`);
-        return response.data; // Debería ser un array como ['January', 'February']
+        return response.data;
     } catch (error) {
         console.error(`Error al consultar meses descargados para ${providerName}:`, error.message);
         return [];
@@ -186,7 +184,7 @@ async function ingestAllData() {
 }
 
 
-// --- API ENDPOINT ---
+// --- API ENDPOINT (Se usa solo si ejecutas este servicio de forma independiente) ---
 app.post('/trigger-ingest', async (req, res) => {
     try {
         const result = await ingestAllData();
@@ -204,3 +202,8 @@ app.post('/trigger-ingest', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Microservicio 'ingestor-grafana-rendimiento' corriendo en el puerto ${PORT}`);
 });
+
+
+// --- ¡AQUÍ ESTÁ LA LÍNEA FINAL Y CORRECTA! ---
+// Exportamos la función principal para que el orquestador pueda llamarla.
+module.exports = ingestAllData;
