@@ -1,21 +1,27 @@
-// Importamos dotenv para leer las variables del archivo .env que crea GitHub Actions
-require('dotenv').config({ path: './services/ingestor-jira/.env' });
+// services/ingestor-jira/api-ingestor.js
+
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const fetch = require('node-fetch');
 const { MongoClient } = require('mongodb');
 
-// --- 1. CONFIGURACIÓN (Ahora leída desde variables de entorno) ---
+// --- 1. CONFIGURACIÓN ---
 const JIRA_URL = "https://ar-telefonicahispam.atlassian.net";
 const JIRA_EMAIL = process.env.JIRA_EMAIL;
 const API_TOKEN = process.env.API_TOKEN;
 const MONGO_URI = process.env.MONGO_URI;
-
-// Los IDs de los filtros ahora vienen de una variable, separados por coma
 const FILTER_IDS = process.env.JIRA_FILTER_IDS ? process.env.JIRA_FILTER_IDS.split(',') : [];
 
-// ... (El resto del script es el mismo que te di antes, no necesita cambios) ...
-// ... pegué todo de nuevo por las dudas ...
+// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+// Definimos los nombres de la base de datos y la colección
+const DB_NAME = 'plataforma_datos_jira';
+const COLLECTION_NAME = 'issues';
+// ------------------------------------
 
+/**
+ * Función principal que orquesta todo el proceso
+ */
 async function main() {
     console.log('🚀 Iniciando ingestor de datos desde la API de Jira...');
 
@@ -43,6 +49,7 @@ async function main() {
     console.log(`\nSe consolidaron ${allIssues.length} registros en ${uniqueIssues.length} tickets únicos.`);
 
     await uploadToMongo(uniqueIssues);
+
     console.log('\n✅ ¡Proceso de ingesta por API completado con éxito!');
 }
 
@@ -128,11 +135,8 @@ async function uploadToMongo(issues) {
     }
 }
 
-// Para que el script pueda ser llamado por el orquestador, lo exportamos como una función.
-// Si el orquestador simplemente hace un 'require' y lo ejecuta, esto funcionará.
-// Si el orquestador lo ejecuta como un proceso separado, el 'main()' se ejecutará.
+module.exports = main;
+
 if (require.main === module) {
     main();
 }
-
-module.exports = main;
