@@ -23,7 +23,7 @@ jobs:
       # Este paso es crucial. Instala todas las librerías necesarias
       # definidas en tu package.json (axios, mongodb, node-fetch, etc.)
       - name: Instalar dependencias de Node.js
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       # --- PASO DE CREAR .env (SIN CAMBIOS PARA OTROS SERVICIOS) ---
       - name: Crear .env para el servicio de persistencia
