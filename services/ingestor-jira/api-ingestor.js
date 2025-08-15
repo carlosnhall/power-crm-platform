@@ -14,8 +14,8 @@ const FILTER_IDS = process.env.JIRA_FILTER_IDS ? process.env.JIRA_FILTER_IDS.spl
 
 // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
 // Definimos los nombres de la base de datos y la colección
-const DB_NAME = 'plataforma_datos_jira';
-const COLLECTION_NAME = 'issues';
+const DB_NAME = 'power_crm_data';        // <-- Nombre de la base de datos cambiado
+const COLLECTION_NAME = 'jira_issues';   // <-- Sugiero un nombre más claro para la colección
 // ------------------------------------
 
 /**

@@ -9,9 +9,10 @@ const DOWNLOAD_URL_BASE = process.env.GRAFANA_DOWNLOAD_URL;
 const WINDOWS_USER = process.env.WINDOWS_USER;
 const WINDOWS_PASSWORD = process.env.WINDOWS_PASSWORD;
 
+// --- NUEVA CONFIGURACIÓN DE MONGODB ---
 const MONGO_URI = process.env.MONGO_URI;
-const DB_NAME = 'plataforma_datos_jira';
-const COLLECTION_NAME = 'rendimiento';
+const DB_NAME = 'power_crm_data';              // <-- Mismo nuevo nombre de base de datos
+const COLLECTION_NAME = 'grafana_rendimiento'; // <-- Sugiero un nombre más claro para la colección
 
 const PROVEEDORES = {
     "CONNECTIS": {
