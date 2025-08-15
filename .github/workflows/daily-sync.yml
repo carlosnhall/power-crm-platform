@@ -8,7 +8,7 @@ on:
 
 jobs:
   sync-data:
-    runs-on: [self-hosted, Windows] # <--- ¡CAMBIO IMPORTANTE!
+    runs-on: self-hosted
     steps:
       - name: Checkout del código
         uses: actions/checkout@v3
