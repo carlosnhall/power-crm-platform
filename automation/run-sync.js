@@ -1,9 +1,10 @@
 // automation/run-sync.js
 
 // Importamos las funciones principales de nuestros ingestores.
-const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js');
-const ingestGrafanaData = require('../services/ingestor-grafana-rendimiento/index.js');
-const ingestIndividuosData = require('../services/ingestor-individuos/index.js');
+const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
+const ingestGrafanaData = require('../services/ingestor-grafana-rendimiento/index.js'); 
+// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js'); 
 
 /**
  * Función principal que orquesta la ejecución de los ingestores.
@@ -27,7 +28,6 @@ async function runSynchronization() {
 
   } catch (error) {
     console.error('❌ Ocurrió un error grave durante la orquestación:', error);
-    // process.exit(1) le dice a GitHub Actions que el job falló
     process.exit(1);
   }
 }
