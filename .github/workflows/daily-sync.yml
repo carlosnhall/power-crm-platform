@@ -8,7 +8,7 @@ on:
 
 jobs:
   sync-data:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows] # <--- ¡CAMBIO IMPORTANTE!
     steps:
       - name: Checkout del código
         uses: actions/checkout@v3
