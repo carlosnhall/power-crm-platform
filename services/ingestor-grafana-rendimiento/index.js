@@ -1,5 +1,5 @@
 // Importar las librerías necesarias
-const { execSync } = require('child_process'); // Para ejecutar comandos de sistema como 'curl'
+const { execSync } = require('child_process');
 const Papa = require('papaparse');
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
@@ -9,10 +9,11 @@ const DOWNLOAD_URL_BASE = process.env.GRAFANA_DOWNLOAD_URL;
 const WINDOWS_USER = process.env.WINDOWS_USER;
 const WINDOWS_PASSWORD = process.env.WINDOWS_PASSWORD;
 
-// --- NUEVA CONFIGURACIÓN DE MONGODB ---
 const MONGO_URI = process.env.MONGO_URI;
-const DB_NAME = 'power_crm_data';              // <-- Mismo nuevo nombre de base de datos
-const COLLECTION_NAME = 'grafana_rendimiento'; // <-- Sugiero un nombre más claro para la colección
+// --- ¡AQUÍ ESTÁ LA CLAVE! ---
+// Usamos nombres fijos para la base de datos y la colección.
+const DB_NAME = 'power_crm_data';
+const COLLECTION_NAME = 'grafana_rendimiento'; 
 
 const PROVEEDORES = {
     "CONNECTIS": {
@@ -23,28 +24,18 @@ const PROVEEDORES = {
     }
 };
 
-/**
- * --- FUNCIÓN REESCRITA CON cURL ---
- * Descarga un reporte usando un comando de sistema 'curl'.
- */
 async function downloadReport(providerConfig, monthName, monthNumber, reportName, year = "2025") {
     const k_param = `${monthNumber}_${year}`;
     console.log(`📥 Descargando reporte ${providerConfig.id_proveedor}-${reportName} para ${k_param} usando cURL...`);
-    
     if (!WINDOWS_USER || !WINDOWS_PASSWORD) {
         console.error('❌ Error: Faltan las credenciales WINDOWS_USER o WINDOWS_PASSWORD en los secretos.');
         return [];
     }
-
     const fullUrl = `${DOWNLOAD_URL_BASE}?b=Base_INFGRF&q=AM/${reportName}&p=${providerConfig.id_proveedor}&k=${k_param}&of=download`;
     const command = `curl --ntlm --user "${WINDOWS_USER}:${WINDOWS_PASSWORD}" --silent --fail "${fullUrl}"`;
-
     try {
         const csvContent = execSync(command, { encoding: 'utf-8' });
-        if (!csvContent || csvContent.toLowerCase().includes("html")) {
-            console.log(`❌ Error de autenticación o respuesta vacía para el reporte '${reportName}'.`);
-            return [];
-        }
+        if (!csvContent || csvContent.toLowerCase().includes("html")) { return []; }
         const parsedData = Papa.parse(csvContent, { header: true, skipEmptyLines: true, delimiter: ';' });
         console.log(`✅ Se leyeron ${parsedData.data.length} filas del reporte '${reportName}'.`);
         return parsedData.data;
@@ -53,8 +44,6 @@ async function downloadReport(providerConfig, monthName, monthNumber, reportName
         return [];
     }
 }
-
-// ... (El resto de las funciones: getMesesYaDescargados, uploadToMongo, ingestAllData no cambian) ...
 
 async function getMesesYaDescargados(providerName) {
     if (!MONGO_URI) return [];
@@ -83,6 +72,7 @@ async function uploadToMongo(dataToUpload) {
         }, {});
         for (const key in dataByProviderAndMonth) {
             const payload = dataByProviderAndMonth[key];
+            console.log(` -> Actualizando ${payload.data.length} registros de ${payload.proveedor} para ${payload.mes}...`);
             await collection.deleteMany({ Proveedor: payload.proveedor, MesConsulta: payload.mes });
             await collection.insertMany(payload.data);
         }
