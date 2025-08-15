@@ -35,3 +35,6 @@ jobs:
           GRAFANA_DOWNLOAD_URL: ${{ secrets.GRAFANA_DOWNLOAD_URL }}
           WINDOWS_USER: ${{ secrets.WINDOWS_USER }}
           WINDOWS_PASSWORD: ${{ secrets.WINDOWS_PASSWORD }}
+          GRAFANA_API_URL: ${{ secrets.GRAFANA_API_URL }}
+          GRAFANA_DATASOURCE_ID: ${{ secrets.GRAFANA_DATASOURCE_ID }}
+          GRAFANA_ORG_ID: ${{ secrets.GRAFANA_ORG_ID }}
