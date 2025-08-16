@@ -4,7 +4,7 @@
 // ¡Asegúrate de que estas rutas apunten a los archivos correctos de tus servicios!
 const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
 const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
-const ingestIndividuosData = require('../services/ingestor-individuos/index.js');
+const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
 const ingestMasivosData = require('../services/ingestor-grafana-masivos/index.js');
 
 /**
