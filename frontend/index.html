@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Power CRM</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Estilos Generales y Fondo Animado --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body { 
+            font-family: 'Poppins', sans-serif;
+            color: #fff; /* Texto principal en blanco para que contraste */
+            background: linear-gradient(-45deg, #0033a0, #0052cc, #4285F4, #009cde);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Estructura del Dashboard --- */
+        .container {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            padding: 2rem 1rem;
+            flex-shrink: 0; /* Evita que la barra lateral se encoja */
+            /* Efecto Glassmorphism para la barra lateral */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .sidebar h1 {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .sidebar-link {
+            display: block;
+            padding: 1rem;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto; /* Permite scroll si el contenido es muy largo */
+            height: 100vh;
+        }
+        
+        /* Contenedor genérico para las tarjetas */
+        .card {
+            /* --- ¡AQUÍ ESTÁ LA MAGIA DEL GLASSMORPHISM! --- */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px); /* Para Safari */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        h2 { margin-bottom: 1.5rem; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        
+        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { text-align: center; }
+        .kpi-card .value { font-size: 2.5em; font-weight: 700; }
+        .kpi-card .label { font-size: 1em; opacity: 0.8; margin-top: 5px; }
+
+        .charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        
+        /* Estilos para que la tabla (Grid.js) se vea bien sobre el fondo */
+        .gridjs-container {
+            color: #172B4D; /* Texto oscuro para la tabla para que sea legible */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <nav class="sidebar">
+            <h1>Power CRM</h1>
+            <a href="#" class="sidebar-link active">Dashboard Jira</a>
+            <a href="#" class="sidebar-link">Rendimiento</a>
+            <a href="#" class="sidebar-link">Incidentes</a>
+        </nav>
+
+        <main class="main-content">
+            <section class="kpi-container">
+                <div class="card kpi-card"><div class="value" id="kpi-activos">--</div><div class="label">Tickets Activos</div></div>
+                <div class="card kpi-card"><div class="value" id="kpi-creados">--</div><div class="label">Creados (Últimos 30 días)</div></div>
+                <div class="card kpi-card"><div class="value" id="kpi-resueltos">--</div><div class="label">Resueltos (Últimos 30 días)</div></div>
+                <div class="card kpi-card"><div class="value" id="kpi-sin-asignar">--</div><div class="label">Tickets sin Asignar</div></div>
+            </section>
+
+            <section class="charts-container">
+                <div class="card chart-card">
+                    <h2>Tickets por Estado</h2>
+                    <canvas id="statusChart"></canvas>
+                </div>
+                <div class="card chart-card">
+                    <h2>Tickets por Prioridad</h2>
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Detalle de Tickets</h2>
+                <div id="grid-container"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- TODO EL JAVASCRIPT QUE YA TENÍAMOS FUNCIONA IGUAL ---
+        
+        // Configuraciones globales para que los gráficos se vean bien con el nuevo tema
+        Chart.defaults.color = '#fff';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)';
+
+        function createStatusChart(issues) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            const statusCounts = issues.reduce((acc, issue) => { acc[issue.status] = (acc[issue.status] || 0) + 1; return acc; }, {});
+            new Chart(ctx, {
+                type: 'doughnut', // Un gráfico de dona se ve más moderno
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        label: 'Tickets', data: Object.values(statusCounts),
+                        backgroundColor: ['rgba(0, 82, 204, 0.7)', 'rgba(251, 188, 5, 0.7)', 'rgba(52, 168, 83, 0.7)', 'rgba(234, 67, 53, 0.7)', 'rgba(218, 0, 147, 0.7)', 'rgba(16, 146, 128, 0.7)'],
+                        borderColor: '#fff', borderWidth: 2, hoverOffset: 4
+                    }]
+                },
+                options: { plugins: { legend: { labels: { color: '#fff' } } } }
+            });
+        }
+
+        function createPriorityChart(issues) {
+            const ctx = document.getElementById('priorityChart').getContext('2d');
+            const priorityCounts = issues.reduce((acc, issue) => { const priority = issue.priority || 'No asignada'; acc[priority] = (acc[priority] || 0) + 1; return acc; }, {});
+            const sortedPriorities = ['Highest', 'High', 'Medium', 'Low', 'Lowest', 'No asignada'].filter(p => priorityCounts[p]);
+            const sortedData = sortedPriorities.map(p => priorityCounts[p]);
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedPriorities,
+                    datasets: [{ label: 'Cantidad de Tickets', data: sortedData, backgroundColor: 'rgba(255, 255, 255, 0.7)' }]
+                },
+                options: { 
+                    indexAxis: 'y',
+                    scales: {
+                        x: { ticks: { color: '#fff' } },
+                        y: { ticks: { color: '#fff' } }
+                    },
+                    plugins: { legend: { labels: { color: '#fff' } } }
+                }
+            });
+        }
+
+        function calculateAndDisplayKPIs(issues) {
+            const AHORA = new Date(); const HACE_30_DIAS = new Date().setDate(AHORA.getDate() - 30);
+            const estadosFinalizados = ['DONE', 'FINALIZADO', 'CERRADO', 'CANCELADO', 'CLOSED', 'RESOLVED'];
+            const activos = issues.filter(i => !estadosFinalizados.includes((i.status || '').toUpperCase()));
+            document.getElementById('kpi-activos').textContent = activos.length;
+            const creadosRecientes = issues.filter(i => new Date(i.created_at) >= HACE_30_DIAS);
+            document.getElementById('kpi-creados').textContent = creadosRecientes.length;
+            const resueltosRecientes = issues.filter(i => new Date(i.updated_at) >= HACE_30_DIAS && estadosFinalizados.includes((i.status || '').toUpperCase()));
+            document.getElementById('kpi-resueltos').textContent = resueltosRecientes.length;
+            const sinAsignar = activos.filter(i => i.assignee === 'No asignado' || !i.assignee);
+            document.getElementById('kpi-sin-asignar').textContent = sinAsignar.length;
+        }
+
+        async function main() {
+            const apiUrl = 'http://localhost:3005/api/jira/issues';
+            const mainContent = document.querySelector('.main-content');
+            
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`Error de red: ${response.status}`);
+                const issues = await response.json();
+
+                calculateAndDisplayKPIs(issues);
+                createStatusChart(issues);
+                createPriorityChart(issues);
+
+                new gridjs.Grid({
+                    columns: ['Clave', 'Resumen', 'Tipo', 'Estado', 'Prioridad', 'Responsable', 'Creada'],
+                    data: issues.map(issue => [
+                        issue.key, issue.summary, issue.issue_type, issue.status, issue.priority, issue.assignee, 
+                        new Date(issue.created_at).toLocaleDateString('es-AR')
+                    ]),
+                    search: true, sort: true, pagination: { enabled: true, limit: 10 },
+                    style: { table: { 'background-color': 'rgba(255, 255, 255, 0.9)', 'border-radius': '8px' }, th: { 'background-color': '#e9ecef' } },
+                    language: { 'search': { 'placeholder': '🔍 Escribí para buscar...' }, 'pagination': { 'previous': 'Anterior', 'next': 'Siguiente', 'showing': 'Mostrando', 'to': 'a', 'of': 'de', 'results': 'resultados' } }
+                }).render(document.querySelector('#grid-container'));
+
+            } catch (error) {
+                mainContent.innerHTML = `<h1 style="color: #fff; text-align: center;">❌ Error al cargar los datos: ${error.message}</h1>`;
+            }
+        }
+
+        main();
+    </script>
+
+</body>
+</html>

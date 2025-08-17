@@ -1,7 +1,5 @@
 // services/ingestor-jira/api-ingestor.js
 
-
-
 const fetch = require('node-fetch');
 const { MongoClient } = require('mongodb');
 
@@ -12,11 +10,18 @@ const API_TOKEN = process.env.API_TOKEN;
 const MONGO_URI = process.env.MONGO_URI;
 const FILTER_IDS = process.env.JIRA_FILTER_IDS ? process.env.JIRA_FILTER_IDS.split(',') : [];
 
-// --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-// Definimos los nombres de la base de datos y la colección
-const DB_NAME = 'power_crm_data';        // <-- Nombre de la base de datos cambiado
-const COLLECTION_NAME = 'jira_issues';   // <-- Sugiero un nombre más claro para la colección
-// ------------------------------------
+const DB_NAME = 'power_crm_data';
+const COLLECTION_NAME = 'jira_issues';
+
+// --- MEJORA: Definimos los campos que queremos traer de la API ---
+// Pedir solo los campos necesarios hace la consulta más eficiente.
+// 'customfield_10016' es el campo por defecto para Story Points, puede variar.
+const JIRA_FIELDS = [
+    "summary", "issuetype", "status", "priority", "resolution",
+    "assignee", "reporter", "created", "updated", "duedate",
+    "project", "sprint", "customfield_10016" 
+].join(',');
+
 
 /**
  * Función principal que orquesta todo el proceso
@@ -60,36 +65,53 @@ async function fetchIssuesFromFilter(filterId, authHeader) {
 
     while (!isLast) {
         const jql = `filter = ${filterId}`;
-        const apiUrl = `${JIRA_URL}/rest/api/3/search?jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}`;
+        // --- MEJORA: Añadimos el parámetro 'fields' a la URL ---
+        const apiUrl = `${JIRA_URL}/rest/api/3/search?jql=${encodeURIComponent(jql)}&fields=${JIRA_FIELDS}&startAt=${startAt}&maxResults=${maxResults}`;
+        
         try {
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: { 'Authorization': authHeader, 'Accept': 'application/json' }
             });
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`❌ Error al consultar el filtro ${filterId}: ${response.status} - ${errorText}`);
                 break;
             }
+
             const pageData = await response.json();
-            const cleanedIssues = pageData.issues.map(issue => ({
-                key: issue.key,
-                summary: issue.fields.summary,
-                issue_type: issue.fields.issuetype.name,
-                status: issue.fields.status.name,
-                priority: issue.fields.priority ? issue.fields.priority.name : null,
-                resolution: issue.fields.resolution ? issue.fields.resolution.name : null,
-                assignee: issue.fields.assignee ? issue.fields.assignee.displayName : "No asignado",
-                reporter: issue.fields.reporter ? issue.fields.reporter.displayName : "No asignado",
-                created_at: issue.fields.created,
-                updated_at: issue.fields.updated,
-                due_date: issue.fields.duedate,
-                project_key: issue.fields.project.key,
-                project_name: issue.fields.project.name
-            }));
+            
+            const cleanedIssues = pageData.issues.map(issue => {
+                // --- LÓGICA PARA EXTRAER SPRINT ---
+                // El campo sprint suele ser un array, tomamos el último que es el más reciente/activo.
+                const sprintInfo = issue.fields.sprint;
+                const sprintName = sprintInfo && sprintInfo.length > 0 ? sprintInfo[sprintInfo.length - 1].name : null;
+
+                return {
+                    key: issue.key,
+                    summary: issue.fields.summary,
+                    issue_type: issue.fields.issuetype.name,
+                    status: issue.fields.status.name,
+                    priority: issue.fields.priority ? issue.fields.priority.name : null,
+                    resolution: issue.fields.resolution ? issue.fields.resolution.name : null,
+                    assignee: issue.fields.assignee ? issue.fields.assignee.displayName : "No asignado",
+                    reporter: issue.fields.reporter ? issue.fields.reporter.displayName : "No asignado",
+                    created_at: issue.fields.created,
+                    updated_at: issue.fields.updated,
+                    due_date: issue.fields.duedate,
+                    project_key: issue.fields.project.key,
+                    project_name: issue.fields.project.name,
+                    // --- NUEVOS CAMPOS AÑADIDOS ---
+                    sprint: sprintName,
+                    story_points: issue.fields.customfield_10016 || null 
+                };
+            });
+
             allIssues.push(...cleanedIssues);
             isLast = (pageData.startAt + pageData.issues.length) >= pageData.total;
             startAt += pageData.issues.length;
+
         } catch (error) {
             console.error(`🚨 Ocurrió un error de conexión consultando el filtro ${filterId}:`, error);
             break;
@@ -116,6 +138,7 @@ async function uploadToMongo(issues) {
         const database = client.db(DB_NAME);
         const collection = database.collection(COLLECTION_NAME);
         console.log(`\nConectado a MongoDB. Actualizando ${issues.length} registros...`);
+
         const bulkOps = issues.map(issue => ({
             updateOne: {
                 filter: { key: issue.key },
@@ -123,6 +146,7 @@ async function uploadToMongo(issues) {
                 upsert: true
             }
         }));
+
         if (bulkOps.length > 0) {
             const result = await collection.bulkWrite(bulkOps);
             console.log(`Resultado: ${result.upsertedCount} insertados, ${result.modifiedCount} actualizados.`);
@@ -134,8 +158,7 @@ async function uploadToMongo(issues) {
     }
 }
 
-module.exports = main;
-
+// No es necesario exportar main si solo se ejecuta como script principal.
 if (require.main === module) {
     main();
 }
