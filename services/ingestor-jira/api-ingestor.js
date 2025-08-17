@@ -13,25 +13,23 @@ const FILTER_IDS = process.env.JIRA_FILTER_IDS ? process.env.JIRA_FILTER_IDS.spl
 const DB_NAME = 'power_crm_data';
 const COLLECTION_NAME = 'jira_issues';
 
-// --- MEJORA: Definimos los campos que queremos traer de la API ---
-// Pedir solo los campos necesarios hace la consulta más eficiente.
-// 'customfield_10016' es el campo por defecto para Story Points, puede variar.
 const JIRA_FIELDS = [
     "summary", "issuetype", "status", "priority", "resolution",
     "assignee", "reporter", "created", "updated", "duedate",
     "project", "sprint", "customfield_10016" 
 ].join(',');
 
-
 /**
- * Función principal que orquesta todo el proceso
+ * --- CORRECCIÓN 1: Renombramos la función ---
+ * Ahora se llama 'ingestJiraData' para coincidir con el script que la llama.
  */
-async function main() {
+async function ingestJiraData() {
     console.log('🚀 Iniciando ingestor de datos desde la API de Jira...');
 
     if (!JIRA_EMAIL || !API_TOKEN || !MONGO_URI || FILTER_IDS.length === 0) {
         console.error('❌ Error: Faltan variables de entorno críticas (JIRA_EMAIL, API_TOKEN, MONGO_URI, JIRA_FILTER_IDS).');
-        return;
+        // Devolvemos un error para que el proceso principal se detenga
+        throw new Error("Configuración de entorno incompleta.");
     }
 
     const authHeader = `Basic ${Buffer.from(`${JIRA_EMAIL}:${API_TOKEN}`).toString('base64')}`;
@@ -57,6 +55,10 @@ async function main() {
     console.log('\n✅ ¡Proceso de ingesta por API completado con éxito!');
 }
 
+// Las funciones auxiliares (fetchIssuesFromFilter, deduplicateIssues, uploadToMongo)
+// permanecen exactamente iguales que en la versión anterior.
+// ... (puedes copiar y pegar el resto de las funciones aquí sin cambios)
+
 async function fetchIssuesFromFilter(filterId, authHeader) {
     let allIssues = [];
     let startAt = 0;
@@ -65,7 +67,6 @@ async function fetchIssuesFromFilter(filterId, authHeader) {
 
     while (!isLast) {
         const jql = `filter = ${filterId}`;
-        // --- MEJORA: Añadimos el parámetro 'fields' a la URL ---
         const apiUrl = `${JIRA_URL}/rest/api/3/search?jql=${encodeURIComponent(jql)}&fields=${JIRA_FIELDS}&startAt=${startAt}&maxResults=${maxResults}`;
         
         try {
@@ -83,8 +84,6 @@ async function fetchIssuesFromFilter(filterId, authHeader) {
             const pageData = await response.json();
             
             const cleanedIssues = pageData.issues.map(issue => {
-                // --- LÓGICA PARA EXTRAER SPRINT ---
-                // El campo sprint suele ser un array, tomamos el último que es el más reciente/activo.
                 const sprintInfo = issue.fields.sprint;
                 const sprintName = sprintInfo && sprintInfo.length > 0 ? sprintInfo[sprintInfo.length - 1].name : null;
 
@@ -102,7 +101,6 @@ async function fetchIssuesFromFilter(filterId, authHeader) {
                     due_date: issue.fields.duedate,
                     project_key: issue.fields.project.key,
                     project_name: issue.fields.project.name,
-                    // --- NUEVOS CAMPOS AÑADIDOS ---
                     sprint: sprintName,
                     story_points: issue.fields.customfield_10016 || null 
                 };
@@ -158,7 +156,10 @@ async function uploadToMongo(issues) {
     }
 }
 
-// No es necesario exportar main si solo se ejecuta como script principal.
-if (require.main === module) {
-    main();
-}
+
+/**
+ * --- CORRECCIÓN 2: Exportamos la función ---
+ * Esta línea permite que otros archivos, como 'run-sync.js', puedan
+ * importar y usar la función 'ingestJiraData'.
+ */
+module.exports = ingestJiraData;
