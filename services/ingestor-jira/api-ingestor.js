@@ -184,3 +184,5 @@ async function uploadToPostgres(issues) {
 if (require.main === module) {
     main();
 }
+
+module.exports = main;
