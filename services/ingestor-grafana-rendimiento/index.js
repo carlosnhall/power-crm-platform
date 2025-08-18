@@ -10,8 +10,6 @@ const WINDOWS_USER = process.env.WINDOWS_USER;
 const WINDOWS_PASSWORD = process.env.WINDOWS_PASSWORD;
 
 const MONGO_URI = process.env.MONGO_URI;
-// --- ¡AQUÍ ESTÁ LA CLAVE! ---
-// Usamos nombres fijos para la base de datos y la colección.
 const DB_NAME = 'power_crm_data';
 const COLLECTION_NAME = 'grafana_rendimiento'; 
 
@@ -37,8 +35,19 @@ async function downloadReport(providerConfig, monthName, monthNumber, reportName
         const csvContent = execSync(command, { encoding: 'utf-8' });
         if (!csvContent || csvContent.toLowerCase().includes("html")) { return []; }
         const parsedData = Papa.parse(csvContent, { header: true, skipEmptyLines: true, delimiter: ';' });
+
+        // --- MODIFICACIÓN: Bloque de limpieza de datos ---
+        parsedData.data.forEach(row => {
+          // Revisa si existe una propiedad con nombre vacío
+          if (row.hasOwnProperty("")) {
+            // Si existe, la elimina del objeto
+            delete row[""]; 
+          }
+        });
+        // --- FIN DE LA MODIFICACIÓN ---
+
         console.log(`✅ Se leyeron ${parsedData.data.length} filas del reporte '${reportName}'.`);
-        return parsedData.data;
+        return parsedData.data; // Devuelve los datos ya limpios
     } catch (error) {
         console.error(`❌ Error al ejecutar cURL para el reporte '${reportName}'. Verifica la URL y las credenciales de Windows.`);
         return [];
