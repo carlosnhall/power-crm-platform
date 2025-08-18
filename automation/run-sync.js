@@ -1,11 +1,12 @@
 // automation/run-sync.js
 
-// 1. Importamos las funciones principales de todos nuestros ingestores.
-// ¡Asegúrate de que estas rutas apunten a los archivos correctos de tus servicios!
+// 1. Importamos la función principal del ingestor de Jira.
 const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
-const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
-const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
-const ingestMasivosData = require('../services/ingestor-grafana-masivos/index.js');
+
+// --- Los ingestores de Grafana quedan comentados para el futuro ---
+// const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
+// const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
+// const ingestMasivosData = require('../services/ingestor-grafana-masivos/index.js');
 
 /**
  * Función principal que orquesta la ejecución de los ingestores en orden.
@@ -14,11 +15,13 @@ async function runSynchronization() {
   console.log('--- Iniciando Sincronización de Datos ---');
 
   try {
-    // --- Ejecución de Ingestores ---
+    // --- Ejecución del Ingestor de Jira ---
     console.log('\n--- Ejecutando Ingestor de Jira ---');
     await ingestJiraData();
     console.log('--- Ingestor de Jira finalizado ---');
     
+    // --- Las llamadas a los ingestores de Grafana quedan comentadas ---
+    /*
     console.log('\n--- Ejecutando Ingestor de Grafana (Rendimiento) ---');
     await ingestGrafanaRendimiento();
     console.log('--- Ingestor de Grafana (Rendimiento) finalizado ---');
@@ -30,9 +33,10 @@ async function runSynchronization() {
     console.log('\n--- Ejecutando Ingestor de Grafana (Masivos) ---');
     await ingestMasivosData();
     console.log('--- Ingestor de Grafana (Masivos) finalizado ---');
+    */
 
     // --- Mensaje Final ---
-    console.log('\n✅ Sincronización de todos los datos completada con éxito.');
+    console.log('\n✅ Sincronización de Jira completada con éxito.');
 
   } catch (error) {
     console.error('❌ Ocurrió un error grave durante la orquestación:', error);

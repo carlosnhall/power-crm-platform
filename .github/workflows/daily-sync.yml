@@ -1,43 +1,38 @@
 # Nombre del flujo de trabajo
-name: Sincronización Diaria de Datos
+name: Sincronización Diaria de Jira
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '0 8 * * *' # Se ejecuta todos los días a las 8:00 AM UTC
 
 jobs:
-  sync-data:
+  sync-jira-data:
     runs-on: self-hosted
     steps:
       - name: Checkout del código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
       - name: Instalar dependencias de Node.js
-        run: npm install --legacy-peer-deps
+        run: npm install
 
-      # --- CAMBIO IMPORTANTE ---
-      # Ya no creamos archivos .env. Inyectamos los secretos directamente.
-      - name: Ejecutar el script de sincronización
-        run: node ./automation/run-sync.js
+      - name: Ejecutar el script de sincronización de Jira
+        # La ruta al script que orquesta la ejecución
+        run: node ./automation/run-sync.js 
         env:
-          # Aquí se inyectan tus secretos de forma segura como variables de entorno
-          # para que process.env las pueda leer directamente en todos los scripts.
+          # --- Secretos para PostgreSQL ---
+          PG_USER: ${{ secrets.PG_USER }}
+          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          PG_HOST: ${{ secrets.PG_HOST }}
+          PG_PORT: ${{ secrets.PG_PORT }}
+          PG_DATABASE: ${{ secrets.PG_DATABASE }}
+          
+          # --- Secretos para Jira ---
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           API_TOKEN: ${{ secrets.API_TOKEN }}
-          JIRA_FILTER_IDS: ${{ secrets.JIRA_FILTER_IDS }}
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          GRAFANA_DOWNLOAD_URL: ${{ secrets.GRAFANA_DOWNLOAD_URL }}
-          WINDOWS_USER: ${{ secrets.WINDOWS_USER }}
-          WINDOWS_PASSWORD: ${{ secrets.WINDOWS_PASSWORD }}
-          GRAFANA_API_URL: ${{ secrets.GRAFANA_API_URL }}
-          GRAFANA_DATASOURCE_ID: ${{ secrets.GRAFANA_DATASOURCE_ID }}
-          GRAFANA_ORG_ID: ${{ secrets.GRAFANA_ORG_ID }}
-          GRAFANA_MASIVOS_API_URL: ${{ secrets.GRAFANA_MASIVOS_API_URL }}
-          GRAFANA_MASIVOS_DATASOURCE_ID: ${{ secrets.GRAFANA_MASIVOS_DATASOURCE_ID }}
-          GRAFANA_MASIVOS_ORG_ID: ${{ secrets.GRAFANA_MASIVOS_ORG_ID }}
+          JIRA_FILTERS: ${{ secrets.JIRA_FILTERS }}
