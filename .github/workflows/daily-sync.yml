@@ -42,7 +42,12 @@ jobs:
           GRAFANA_DATASOURCE_ID: ${{ secrets.GRAFANA_DATASOURCE_ID }}
           GRAFANA_ORG_ID: ${{ secrets.GRAFANA_ORG_ID }}
 
-          # --- ¡NUEVO! Secretos para Grafana (Masivos) ---
+          # --- Secretos para Grafana (Masivos) ---
           GRAFANA_MASIVOS_API_URL: ${{ secrets.GRAFANA_MASIVOS_API_URL }}
           GRAFANA_MASIVOS_DATASOURCE_ID: ${{ secrets.GRAFANA_MASIVOS_DATASOURCE_ID }}
           GRAFANA_MASIVOS_ORG_ID: ${{ secrets.GRAFANA_MASIVOS_ORG_ID }}
+
+          # --- ¡NUEVO! Secretos para Grafana (Rendimiento) ---
+          GRAFANA_DOWNLOAD_URL: ${{ secrets.GRAFANA_DOWNLOAD_URL }}
+          WINDOWS_USER: ${{ secrets.WINDOWS_USER }}
+          WINDOWS_PASSWORD: ${{ secrets.WINDOWS_PASSWORD }}

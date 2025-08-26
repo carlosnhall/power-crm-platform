@@ -4,8 +4,7 @@
 const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
 const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
 const ingestMasivosData = require('../services/ingestor-grafana-masivos/index.js');
-// --- Los ingestores de Grafana quedan comentados para el futuro ---
-// const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
+const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
 
 
 
@@ -31,13 +30,13 @@ async function runSynchronization() {
     await ingestMasivosData();
     console.log('--- Ingestor de Grafana (Masivos) finalizado ---');
 
-    /*
+    
     console.log('\n--- Ejecutando Ingestor de Grafana (Rendimiento) ---');
     await ingestGrafanaRendimiento();
     console.log('--- Ingestor de Grafana (Rendimiento) finalizado ---');
 
 
-    */
+    
 
     // --- Mensaje Final ---
     console.log('\n✅ Sincronización de Jira completada con éxito.');
