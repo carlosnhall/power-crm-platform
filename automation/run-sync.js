@@ -2,10 +2,11 @@
 
 // 1. Importamos la función principal del ingestor de Jira.
 const ingestJiraData = require('../services/ingestor-jira/api-ingestor.js'); 
+const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
 
 // --- Los ingestores de Grafana quedan comentados para el futuro ---
 // const ingestGrafanaRendimiento = require('../services/ingestor-grafana-rendimiento/index.js'); 
-// const ingestIndividuosData = require('../services/ingestor-grafana-individuos/index.js');
+
 // const ingestMasivosData = require('../services/ingestor-grafana-masivos/index.js');
 
 /**
@@ -21,14 +22,15 @@ async function runSynchronization() {
     console.log('--- Ingestor de Jira finalizado ---');
     
     // --- Las llamadas a los ingestores de Grafana quedan comentadas ---
-    /*
-    console.log('\n--- Ejecutando Ingestor de Grafana (Rendimiento) ---');
-    await ingestGrafanaRendimiento();
-    console.log('--- Ingestor de Grafana (Rendimiento) finalizado ---');
 
     console.log('\n--- Ejecutando Ingestor de Grafana (Individuos) ---');
     await ingestIndividuosData();
     console.log('--- Ingestor de Grafana (Individuos) finalizado ---');
+
+    /*
+    console.log('\n--- Ejecutando Ingestor de Grafana (Rendimiento) ---');
+    await ingestGrafanaRendimiento();
+    console.log('--- Ingestor de Grafana (Rendimiento) finalizado ---');
 
     console.log('\n--- Ejecutando Ingestor de Grafana (Masivos) ---');
     await ingestMasivosData();

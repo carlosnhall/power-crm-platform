@@ -1,13 +1,15 @@
-# Nombre del flujo de trabajo
-name: Sincronización Diaria de Jira
+# Nombre del flujo de trabajo (sugerencia: más genérico)
+name: Sincronización Diaria de Datos
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 8 * * *' # Se ejecuta todos los días a las 8:00 AM UTC
+    # Se ejecuta todos los días a las 12:00 PM UTC (9:00 AM de Argentina)
+    - cron: '0 13 * * *'
 
 jobs:
-  sync-jira-data:
+  # ID del job (sugerencia: más genérico)
+  sync-data:
     runs-on: self-hosted
     steps:
       - name: Checkout del código
@@ -21,8 +23,7 @@ jobs:
       - name: Instalar dependencias de Node.js
         run: npm install
 
-      - name: Ejecutar el script de sincronización de Jira
-        # La ruta al script que orquesta la ejecución
+      - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js 
         env:
           # --- Secretos para PostgreSQL ---
@@ -36,3 +37,9 @@ jobs:
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           API_TOKEN: ${{ secrets.API_TOKEN }}
           JIRA_FILTERS: ${{ secrets.JIRA_FILTERS }}
+
+          # --- ¡NUEVO! Secretos para Grafana ---
+          # Estos son los que faltaban.
+          GRAFANA_API_URL: ${{ secrets.GRAFANA_API_URL }}
+          GRAFANA_DATASOURCE_ID: ${{ secrets.GRAFANA_DATASOURCE_ID }}
+          GRAFANA_ORG_ID: ${{ secrets.GRAFANA_ORG_ID }}
