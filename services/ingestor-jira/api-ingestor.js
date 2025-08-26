@@ -47,7 +47,8 @@ function transformarJiraParaSQL(issue, nombreMesa) {
         sprint_name: fields.customfield_10020?.[0]?.name ?? null,
         sprint_state: fields.customfield_10020?.[0]?.state ?? null,
         sprint_start_date: fields.customfield_10020?.[0]?.startDate ?? null,
-        sprint_end_date: fields.customfield_10020?.[0]?.endDate ?? null
+        sprint_end_date: fields.customfield_10020?.[0]?.endDate ?? null,
+        story_points: fields.customfield_10028 ?? 0
     };
 }
 
@@ -147,7 +148,8 @@ async function uploadToPostgres(issues) {
         'issue_id', 'issue_url', 'summary', 'description', 'project_name', 'nombre_mesa',
         'status', 'issue_type', 'priority', 'created_date', 'updated_date', 'resolved_date',
         'due_date', 'assignee_name', 'reporter_name', 'epic_link_key', 'epic_name',
-        'sprint_name', 'sprint_state', 'sprint_start_date', 'sprint_end_date'
+        'sprint_name', 'sprint_state', 'sprint_start_date', 'sprint_end_date',
+        'story_points'
     ];
     const onConflictUpdate = columns.slice(1).map(col => `${col} = EXCLUDED.${col}`).join(', ');
 
