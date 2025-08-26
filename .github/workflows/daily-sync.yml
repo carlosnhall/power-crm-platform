@@ -1,14 +1,13 @@
-# Nombre del flujo de trabajo (sugerencia: más genérico)
+# Nombre del flujo de trabajo
 name: Sincronización Diaria de Datos
 
 on:
   workflow_dispatch:
   schedule:
-    # Se ejecuta todos los días a las 12:00 PM UTC (9:00 AM de Argentina)
+    # Se ejecuta todos los días a las 13:00 PM UTC (10:00 AM de Argentina)
     - cron: '0 13 * * *'
 
 jobs:
-  # ID del job (sugerencia: más genérico)
   sync-data:
     runs-on: self-hosted
     steps:
@@ -26,7 +25,7 @@ jobs:
       - name: Ejecutar el script de sincronización
         run: node ./automation/run-sync.js 
         env:
-          # --- Secretos para PostgreSQL ---
+          # --- Secretos para PostgreSQL (compartidos) ---
           PG_USER: ${{ secrets.PG_USER }}
           PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
           PG_HOST: ${{ secrets.PG_HOST }}
@@ -38,8 +37,12 @@ jobs:
           API_TOKEN: ${{ secrets.API_TOKEN }}
           JIRA_FILTERS: ${{ secrets.JIRA_FILTERS }}
 
-          # --- ¡NUEVO! Secretos para Grafana ---
-          # Estos son los que faltaban.
+          # --- Secretos para Grafana (Individuos) ---
           GRAFANA_API_URL: ${{ secrets.GRAFANA_API_URL }}
           GRAFANA_DATASOURCE_ID: ${{ secrets.GRAFANA_DATASOURCE_ID }}
           GRAFANA_ORG_ID: ${{ secrets.GRAFANA_ORG_ID }}
+
+          # --- ¡NUEVO! Secretos para Grafana (Masivos) ---
+          GRAFANA_MASIVOS_API_URL: ${{ secrets.GRAFANA_MASIVOS_API_URL }}
+          GRAFANA_MASIVOS_DATASOURCE_ID: ${{ secrets.GRAFANA_MASIVOS_DATASOURCE_ID }}
+          GRAFANA_MASIVOS_ORG_ID: ${{ secrets.GRAFANA_MASIVOS_ORG_ID }}
