@@ -48,7 +48,7 @@ async function ingestMasivosData() {
 
 // La función fetchFromGrafana no necesita cambios, ya que obtiene los datos de la misma forma.
 async function fetchFromGrafana() {
-    // ... (esta función se mantiene exactamente igual que la original) ...
+    // ... (el código anterior de la función no cambia) ...
     const toDate = new Date();
     const fromDate = new Date(toDate.getFullYear(), 0, 1);
     const startTimeMs = fromDate.getTime();
@@ -70,7 +70,8 @@ async function fetchFromGrafana() {
         WHERE
         SUBMIT_DATE >= DATEDIFF(s, '1970-01-01 00:00:00', CONVERT(varchar(4), DATEPART(YEAR,GETDATE())) + '-' + CONVERT(varchar(4), DATEPART(MONTH,GETDATE())) + '-01 00:00:00.000') + 10800
         AND CATEGORIZATION_TIER_2 IN ('Incidentes Masivos','INTRANET / INTERNET CORPORATIVA')
-        AND CATEGORIZATION_TIER_3 IN ('Autogestión WEB Empresas','Autogestión WEB Individuos','Power CRM','Tuenti Digital','eCommerce','Intranet','Incidente Masivo - GDI')
+        -- 👇 LÍNEA MODIFICADA 👇
+        AND CATEGORIZATION_TIER_3 = 'Power CRM'
     `;
     const payload = { from: String(startTimeMs), to: String(currentTimeMs), queries: [{ refId: "A", datasourceId: GRAFANA_DATASOURCE_ID, rawSql: rawSql, format: "table" }] };
     const headers = { "Content-Type": "application/json", "Accept": "application/json", "X-Grafana-Org-Id": String(GRAFANA_ORG_ID) };
@@ -132,4 +133,4 @@ module.exports = ingestMasivosData;
 
 // --- ¡AGREGÁ ESTA LÍNEA AL FINAL! ---
 // Esta línea ejecuta la función principal al correr el script.
-ingestMasivosData();
+//ingestMasivosData();
