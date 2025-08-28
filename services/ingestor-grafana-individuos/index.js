@@ -145,7 +145,7 @@ async function ingestIndividuosData() {
         console.error('❌ Error en el proceso principal de ingestión:', error.message);
     }
 }
-
+module.exports = ingestIndividuosData;
 
 // --- 3. EJECUCIÓN DEL SCRIPT ---
 ingestIndividuosData().then(() => {
