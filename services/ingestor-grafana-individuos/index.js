@@ -148,7 +148,13 @@ async function ingestIndividuosData() {
 module.exports = ingestIndividuosData;
 
 // --- 3. EJECUCIÓN DEL SCRIPT ---
+
+/* COMENTA O ELIMINA ESTE BLOQUE.
+   Este código solo es útil si ejecutas `node index.js` directamente,
+   pero causa conflictos cuando lo llamas desde otro script.
+
 ingestIndividuosData().then(() => {
     console.log("Script terminado.");
-    pool.end(); // Cierra todas las conexiones del pool al finalizar
+    pool.end(); 
 });
+*/
