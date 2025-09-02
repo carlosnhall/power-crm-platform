@@ -3,3 +3,7 @@ node_modules/
 
 # Ignorar los archivos de variables de entorno (contienen secretos)
 .env
+
+# Ignorar las carpetas tem
+services\ingestor-grafana-rendimiento\temp_downloads/
+
